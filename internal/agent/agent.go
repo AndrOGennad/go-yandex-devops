@@ -54,13 +54,26 @@ func GetGaugeMetrics() []internal.Metric {
 	return data
 }
 
-func SendMetric(metric internal.Metric) error {
+type Sender interface {
+	Send(metric internal.Metric) error
+}
+
+type HTTPSender struct {
+	address string
+	client  *http.Client
+}
+
+func NewHTTPSender(address string, client *http.Client) *HTTPSender {
+	return &HTTPSender{address, client}
+}
+
+func (hs *HTTPSender) Send(metric internal.Metric) error {
 	_url := url.URL{
 		Scheme: "http",
-		Host:   address,
+		Host:   hs.address,
 		Path:   fmt.Sprintf("update/%s/%s/%s", metric.Type, metric.ID, metric.Value()),
 	}
-	response, err := http.Post(_url.String(), "text/plain", nil)
+	response, err := hs.client.Post(_url.String(), "text/plain", nil)
 	if err != nil {
 		return err
 	}
@@ -72,6 +85,7 @@ func SendMetric(metric internal.Metric) error {
 }
 
 func Run(ctx context.Context) error {
+	sender := NewHTTPSender(address, http.DefaultClient)
 	pollTicker := time.NewTicker(pollInterval)
 	defer pollTicker.Stop()
 	reportTicker := time.NewTicker(reportInterval)
@@ -91,7 +105,7 @@ func Run(ctx context.Context) error {
 			fmt.Println("обновили метрики, текущий PollCount: ", pollCounter)
 		case <-reportTicker.C:
 			for _, metric := range metrics {
-				err := SendMetric(metric)
+				err := sender.Send(metric)
 				if err != nil {
 					fmt.Println("ошибка при отправке метрики: ", err)
 				}
