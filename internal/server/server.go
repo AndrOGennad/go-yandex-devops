@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/AndrOGennad/go-yandex-devops/internal"
+	"github.com/go-chi/chi/v5"
 )
 
 const address = "127.0.0.1:8080"
@@ -21,27 +21,10 @@ func NewMetricHandler(store Storage) *MetricHandler {
 }
 
 func (mh *MetricHandler) PutMetric(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
 
-	}
-	/*if r.Header.Get("Contegint-Type") != "text/plain" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}*/
-
-	path := strings.Trim(r.URL.Path, " ")
-	pathVars := strings.Split(path, "/")
-
-	if len(pathVars) < 5 {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	metricTypeParam := pathVars[2]
-	metricIDParam := pathVars[3]
-	metricValueParam := pathVars[4]
+	metricTypeParam := chi.URLParam(r, "type")
+	metricIDParam := chi.URLParam(r, "id")
+	metricValueParam := chi.URLParam(r, "value")
 
 	metric := internal.Metric{
 		ID:   internal.ID(metricIDParam),
@@ -77,14 +60,35 @@ func (mh *MetricHandler) PutMetric(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
+	metricTypeParam := chi.URLParam(r, "type")
+	metricIDParam := chi.URLParam(r, "id")
+
+	if metricTypeParam != "counter" && metricTypeParam != "gauge" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	metric := mh.store.Get(internal.ID(metricIDParam))
+	if metric.ID == "" || metric.Type == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(metric.Value()))
+	return
+}
+
 func Run(ctx context.Context) error {
 	store := NewMemStorage()
 	metricHandler := NewMetricHandler(store)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/update/", metricHandler.PutMetric)
+
+	mux := chi.NewRouter()
+	mux.Get("/value/{type}/{id}", metricHandler.GetMetric)
+	mux.Post("/update/{type}/{id}/{value}", metricHandler.PutMetric)
+
 	server := &http.Server{Handler: mux, Addr: address}
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Println("ошибка сервера", err)
 		}
 	}()
@@ -96,5 +100,4 @@ func Run(ctx context.Context) error {
 		}
 		return ctx.Err()
 	}
-
 }
