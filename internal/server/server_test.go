@@ -21,7 +21,7 @@ func (m MemStorageMock) Put(key internal.ID, value internal.Metric) (newValue in
 	return m.metric
 }
 
-func TestMetricHandler_GetMetric(t *testing.T) {
+func TestMetricHandler_PutMetric(t *testing.T) {
 	storeMock := MemStorageMock{}
 	metricHandler := NewMetricHandler(storeMock)
 
@@ -45,7 +45,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/counter/testCounter/100",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 200},
 		},
@@ -54,7 +54,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/gauge/testGauge/10.0",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 200},
 		},
@@ -63,7 +63,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/counter/testCounter",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 404},
 		},
@@ -72,7 +72,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/gauge/testGauge",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 404},
 		},
@@ -81,7 +81,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/counter/testCounter/none",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 400},
 		},
@@ -90,7 +90,7 @@ func TestMetricHandler_GetMetric(t *testing.T) {
 			request{
 				method:  http.MethodPost,
 				path:    "/update/gauge/testGauge/none",
-				handler: metricHandler.GetMetric,
+				handler: metricHandler.PutMetric,
 			},
 			response{code: 400},
 		},

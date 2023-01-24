@@ -20,7 +20,7 @@ func NewMetricHandler(store Storage) *MetricHandler {
 	return &MetricHandler{store}
 }
 
-func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
+func (mh *MetricHandler) PutMetric(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -34,8 +34,6 @@ func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	path := strings.Trim(r.URL.Path, " ")
 	pathVars := strings.Split(path, "/")
 
-	fmt.Printf("параметры запроса: %s", pathVars)
-
 	if len(pathVars) < 5 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -44,8 +42,6 @@ func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	metricTypeParam := pathVars[2]
 	metricIDParam := pathVars[3]
 	metricValueParam := pathVars[4]
-
-	fmt.Printf("Path: (%s) Type: (%s) Name: (%s) Value: (%s)", pathVars[1], metricTypeParam, metricIDParam, metricValueParam)
 
 	metric := internal.Metric{
 		ID:   internal.ID(metricIDParam),
@@ -85,7 +81,7 @@ func Run(ctx context.Context) error {
 	store := NewMemStorage()
 	metricHandler := NewMetricHandler(store)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/update/", metricHandler.GetMetric)
+	mux.HandleFunc("/update/", metricHandler.PutMetric)
 	server := &http.Server{Handler: mux, Addr: address}
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
