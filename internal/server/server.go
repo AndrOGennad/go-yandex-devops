@@ -26,7 +26,7 @@ func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	/*if r.Header.Get("Content-Type") != "text/plain" {
+	/*if r.Header.Get("Contegint-Type") != "text/plain" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}*/
