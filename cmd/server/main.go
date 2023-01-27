@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os/signal"
 	"syscall"
 
@@ -13,6 +14,10 @@ func main() {
 	ctx, cnl := signal.NotifyContext(parentCtx, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cnl()
 
-	_ = server.Run(ctx)
+	if err := server.Run(ctx); err != nil {
+		fmt.Println(err)
+		return
+	}
 	<-ctx.Done()
+	fmt.Println("сервер остановлен")
 }

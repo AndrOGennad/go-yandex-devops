@@ -22,35 +22,36 @@ const (
 func GetGaugeMetrics() []internal.Metric {
 	stats := new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
-	data := make([]internal.Metric, 0)
-	data = append(data, internal.NewGauge("Alloc", internal.Gauge(stats.Alloc)))
-	data = append(data, internal.NewGauge("BuckHashSys", internal.Gauge(stats.BuckHashSys)))
-	data = append(data, internal.NewGauge("Frees", internal.Gauge(stats.Frees)))
-	data = append(data, internal.NewGauge("GCCPUFraction", internal.Gauge(stats.GCCPUFraction)))
-	data = append(data, internal.NewGauge("GCSys", internal.Gauge(stats.GCSys)))
-	data = append(data, internal.NewGauge("HeapAlloc", internal.Gauge(stats.HeapAlloc)))
-	data = append(data, internal.NewGauge("HeapIdle", internal.Gauge(stats.HeapIdle)))
-	data = append(data, internal.NewGauge("HeapInuse", internal.Gauge(stats.HeapInuse)))
-	data = append(data, internal.NewGauge("HeapObjects", internal.Gauge(stats.HeapObjects)))
-	data = append(data, internal.NewGauge("HeapReleased", internal.Gauge(stats.HeapReleased)))
-	data = append(data, internal.NewGauge("HeapSys", internal.Gauge(stats.HeapSys)))
-	data = append(data, internal.NewGauge("LastGC", internal.Gauge(stats.LastGC)))
-	data = append(data, internal.NewGauge("Lookups", internal.Gauge(stats.Lookups)))
-	data = append(data, internal.NewGauge("MCacheInuse", internal.Gauge(stats.MCacheInuse)))
-	data = append(data, internal.NewGauge("MCacheSys", internal.Gauge(stats.MCacheSys)))
-	data = append(data, internal.NewGauge("MSpanInuse", internal.Gauge(stats.MSpanInuse)))
-	data = append(data, internal.NewGauge("MSpanSys", internal.Gauge(stats.MSpanSys)))
-	data = append(data, internal.NewGauge("Mallocs", internal.Gauge(stats.Mallocs)))
-	data = append(data, internal.NewGauge("NextGC", internal.Gauge(stats.NextGC)))
-	data = append(data, internal.NewGauge("NumForcedGC", internal.Gauge(stats.NumForcedGC)))
-	data = append(data, internal.NewGauge("NumGC", internal.Gauge(stats.NumGC)))
-	data = append(data, internal.NewGauge("OtherSys", internal.Gauge(stats.OtherSys)))
-	data = append(data, internal.NewGauge("PauseTotalNs", internal.Gauge(stats.PauseTotalNs)))
-	data = append(data, internal.NewGauge("StackInuse", internal.Gauge(stats.StackInuse)))
-	data = append(data, internal.NewGauge("StackSys", internal.Gauge(stats.StackSys)))
-	data = append(data, internal.NewGauge("Sys", internal.Gauge(stats.Sys)))
-	data = append(data, internal.NewGauge("TotalAlloc", internal.Gauge(stats.TotalAlloc)))
-	data = append(data, internal.NewGauge("RandomValue", internal.Gauge(rand.Float64())))
+	data := []internal.Metric{
+		internal.NewGauge("Alloc", internal.Gauge(stats.Alloc)),
+		internal.NewGauge("BuckHashSys", internal.Gauge(stats.BuckHashSys)),
+		internal.NewGauge("Frees", internal.Gauge(stats.Frees)),
+		internal.NewGauge("GCCPUFraction", internal.Gauge(stats.GCCPUFraction)),
+		internal.NewGauge("GCSys", internal.Gauge(stats.GCSys)),
+		internal.NewGauge("HeapAlloc", internal.Gauge(stats.HeapAlloc)),
+		internal.NewGauge("HeapIdle", internal.Gauge(stats.HeapIdle)),
+		internal.NewGauge("HeapInuse", internal.Gauge(stats.HeapInuse)),
+		internal.NewGauge("HeapObjects", internal.Gauge(stats.HeapObjects)),
+		internal.NewGauge("HeapReleased", internal.Gauge(stats.HeapReleased)),
+		internal.NewGauge("HeapSys", internal.Gauge(stats.HeapSys)),
+		internal.NewGauge("LastGC", internal.Gauge(stats.LastGC)),
+		internal.NewGauge("Lookups", internal.Gauge(stats.Lookups)),
+		internal.NewGauge("MCacheInuse", internal.Gauge(stats.MCacheInuse)),
+		internal.NewGauge("MCacheSys", internal.Gauge(stats.MCacheSys)),
+		internal.NewGauge("MSpanInuse", internal.Gauge(stats.MSpanInuse)),
+		internal.NewGauge("MSpanSys", internal.Gauge(stats.MSpanSys)),
+		internal.NewGauge("Mallocs", internal.Gauge(stats.Mallocs)),
+		internal.NewGauge("NextGC", internal.Gauge(stats.NextGC)),
+		internal.NewGauge("NumForcedGC", internal.Gauge(stats.NumForcedGC)),
+		internal.NewGauge("NumGC", internal.Gauge(stats.NumGC)),
+		internal.NewGauge("OtherSys", internal.Gauge(stats.OtherSys)),
+		internal.NewGauge("PauseTotalNs", internal.Gauge(stats.PauseTotalNs)),
+		internal.NewGauge("StackInuse", internal.Gauge(stats.StackInuse)),
+		internal.NewGauge("StackSys", internal.Gauge(stats.StackSys)),
+		internal.NewGauge("Sys", internal.Gauge(stats.Sys)),
+		internal.NewGauge("TotalAlloc", internal.Gauge(stats.TotalAlloc)),
+		internal.NewGauge("RandomValue", internal.Gauge(rand.Float64())),
+	}
 	return data
 }
 
@@ -78,7 +79,7 @@ func (hs *HTTPSender) Send(metric internal.Metric) error {
 		return err
 	}
 	defer response.Body.Close()
-	if response.StatusCode == 200 {
+	if response.StatusCode == http.StatusOK {
 		return nil
 	}
 	return errors.New(fmt.Sprintln("сервер вернул плохой код: ", response.Status))

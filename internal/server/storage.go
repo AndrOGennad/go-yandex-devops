@@ -1,27 +1,48 @@
 package server
 
-import "github.com/AndrOGennad/go-yandex-devops/internal"
+import (
+	"errors"
+
+	"github.com/AndrOGennad/go-yandex-devops/internal"
+)
+
+var ErrNotFound = errors.New("not found")
 
 type Storage interface {
-	Get(key internal.ID) internal.Metric
-	Put(key internal.ID, value internal.Metric) (newValue internal.Metric)
+	Get(key internal.ID) (metric internal.Metric, error error)
+	Put(key internal.ID, value internal.Metric) (newValue internal.Metric, error error)
 }
 
 type MemStorage struct {
 	data map[internal.ID]internal.Metric
 }
 
-func (m *MemStorage) Get(key internal.ID) internal.Metric {
-	return m.data[key]
+func (m *MemStorage) Get(key internal.ID) (metric internal.Metric, error error) {
+	if metric, ok := m.data[key]; !ok {
+		return metric, ErrNotFound
+	}
+	return m.data[key], nil
 }
 func NewMemStorage() *MemStorage {
 	data := make(map[internal.ID]internal.Metric)
 	return &MemStorage{data}
 }
 
-func (m *MemStorage) Put(key internal.ID, value internal.Metric) (newValue internal.Metric) {
+func (m *MemStorage) Put(key internal.ID, value internal.Metric) (newValue internal.Metric, error error) {
 
-	if oldValue, exists := m.data[key]; exists {
+	oldValue, ok := m.data[key]
+	if !ok || value.Type == "gauge" {
+		m.data[key] = value
+		return m.data[key], nil
+
+	}
+
+	oldValue.Counter += value.Counter
+	m.data[key] = oldValue
+
+	return m.data[key], nil
+
+	/*if oldValue, exists := m.data[key]; exists {
 		if oldValue.Type == "counter" {
 			newValue = internal.Metric{
 				ID:      value.ID,
@@ -38,5 +59,5 @@ func (m *MemStorage) Put(key internal.ID, value internal.Metric) (newValue inter
 	}
 
 	m.data[key] = newValue
-	return newValue
+	return newValue*/
 }

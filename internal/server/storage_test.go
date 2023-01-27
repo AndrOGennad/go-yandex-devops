@@ -15,10 +15,11 @@ func TestMemStorage_Get(t *testing.T) {
 		key internal.ID
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   internal.Metric
+		name    string
+		fields  fields
+		args    args
+		want    internal.Metric
+		wantErr bool
 	}{
 		{
 			name: "counter metric exists for key",
@@ -35,6 +36,7 @@ func TestMemStorage_Get(t *testing.T) {
 				Type:    "type",
 				Counter: 1,
 			},
+			wantErr: false,
 		},
 		{
 			name: "gauge metric exists for key",
@@ -51,12 +53,18 @@ func TestMemStorage_Get(t *testing.T) {
 				Type:  "type",
 				Gauge: 1.1,
 			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := &MemStorage{data: tt.fields.data}
-			got := storage.Get(tt.args.key)
+			got, err := storage.Get(tt.args.key)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -75,6 +83,7 @@ func TestMemStorage_Put(t *testing.T) {
 		fields       fields
 		args         args
 		wantNewValue internal.Metric
+		wantErr      bool
 	}{
 		{
 			"counter metric not found",
@@ -92,6 +101,7 @@ func TestMemStorage_Put(t *testing.T) {
 				Type:    "counter",
 				Counter: 1,
 			},
+			false,
 		},
 		{
 			"gauge metric not found",
@@ -109,6 +119,7 @@ func TestMemStorage_Put(t *testing.T) {
 				Type:  "gauge",
 				Gauge: 1.1,
 			},
+			false,
 		},
 		{
 			"counter metric found",
@@ -132,6 +143,7 @@ func TestMemStorage_Put(t *testing.T) {
 				Type:    "counter",
 				Counter: 3,
 			},
+			false,
 		},
 		{
 			"gauge metric found",
@@ -155,12 +167,18 @@ func TestMemStorage_Put(t *testing.T) {
 				Type:  "gauge",
 				Gauge: 2.2,
 			},
+			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			store := &MemStorage{data: tt.fields.data}
-			got := store.Put(tt.args.key, tt.args.value)
+			got, err := store.Put(tt.args.key, tt.args.value)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 			assert.Equal(t, got, tt.wantNewValue)
 			written, exists := tt.fields.data[tt.args.key]
 			assert.True(t, exists)

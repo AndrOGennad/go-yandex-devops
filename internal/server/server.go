@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/AndrOGennad/go-yandex-devops/internal"
 	"github.com/go-chi/chi/v5"
@@ -49,12 +50,13 @@ func (mh *MetricHandler) PutMetric(w http.ResponseWriter, r *http.Request) {
 		}
 		metric.Gauge = internal.Gauge(value)
 	default:
+		// код 422 не проходит авто тесты
 		w.WriteHeader(http.StatusNotImplemented)
 		fmt.Println("получена метрика неизвестного типа")
 		return
 	}
 
-	_ = mh.store.Put(metric.ID, metric)
+	_, _ = mh.store.Put(metric.ID, metric)
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	return
@@ -68,8 +70,8 @@ func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	metric := mh.store.Get(internal.ID(metricIDParam))
-	if metric.ID == "" || metric.Type == "" {
+	metric, err := mh.store.Get(internal.ID(metricIDParam))
+	if err == ErrNotFound {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -87,17 +89,26 @@ func Run(ctx context.Context) error {
 	mux.Post("/update/{type}/{id}/{value}", metricHandler.PutMetric)
 
 	server := &http.Server{Handler: mux, Addr: address}
+
+	errCh := make(chan error)
+	defer close(errCh)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Println("ошибка сервера", err)
+			errCh <- err
 		}
 	}()
 
 	select {
 	case <-ctx.Done():
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
 		if err := server.Shutdown(ctx); err != nil {
 			return err
+		} else {
+			return nil
 		}
-		return ctx.Err()
+	case err := <-errCh:
+		fmt.Println("ошибка сервера", err)
+		return err
 	}
 }

@@ -14,12 +14,12 @@ type MemStorageMock struct {
 	metric internal.Metric
 }
 
-func (m MemStorageMock) Get(key internal.ID) internal.Metric {
-	return m.metric
+func (m MemStorageMock) Get(internal.ID) (internal.Metric, error) {
+	return m.metric, nil
 }
 
-func (m MemStorageMock) Put(key internal.ID, value internal.Metric) (newValue internal.Metric) {
-	return m.metric
+func (m MemStorageMock) Put(internal.ID, internal.Metric) (newValue internal.Metric, error error) {
+	return m.metric, nil
 }
 
 func TestMetricHandler_PutMetric(t *testing.T) {
@@ -101,6 +101,16 @@ func TestMetricHandler_PutMetric(t *testing.T) {
 				handler:     metricHandler.PutMetric,
 			},
 			response{code: 400},
+		},
+		{
+			"invalid_type_501",
+			request{
+				method:      http.MethodPost,
+				path:        "/update/invalid_type/testCounter/100",
+				pathPattern: "/update/{type}/{id}/{value}",
+				handler:     metricHandler.PutMetric,
+			},
+			response{code: 501},
 		},
 	}
 	for _, tt := range tests {
