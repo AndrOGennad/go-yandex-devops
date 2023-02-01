@@ -30,7 +30,6 @@ func TestSendMetric(t *testing.T) {
 			}},
 			func(writer http.ResponseWriter, request *http.Request) {
 				writer.WriteHeader(200)
-				return
 			},
 			false,
 		},
@@ -43,7 +42,6 @@ func TestSendMetric(t *testing.T) {
 			}},
 			func(writer http.ResponseWriter, request *http.Request) {
 				writer.WriteHeader(200)
-				return
 			},
 			false,
 		},

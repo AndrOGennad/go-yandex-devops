@@ -56,10 +56,14 @@ func (mh *MetricHandler) PutMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = mh.store.Put(metric.ID, metric)
+	_, err := mh.store.Put(metric.ID, metric)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("не получилось сохранить метрику")
+		return
+	}
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	return
 }
 
 func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +81,6 @@ func (mh *MetricHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(metric.Value()))
-	return
 }
 
 func Run(ctx context.Context) error {
